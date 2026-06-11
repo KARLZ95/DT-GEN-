@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>La Maison Creuse — DT-GEN</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: #000; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    cursor: crosshair;
+  }
+  #screen {
+    width: 100vw; height: 56.25vw;
+    max-height: 100vh; max-width: 177.78vh;
+    image-rendering: pixelated;
+  }
+</style>
+</head>
+<body>
+<canvas id="screen"></canvas>
+<script src="src/audio.js"></script>
+<script src="src/maps.js"></script>
+<script src="src/game.js"></script>
+</body>
+</html>
