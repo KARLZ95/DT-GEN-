@@ -1,11 +1,19 @@
 # La Maison Creuse
 
 Jeu d'horreur psychologique jouable dans le navigateur — implémentation du
-[Game Design Document](docs/GDD.md) DT-GEN. Vue à la première personne,
-raycasting texturé par pixel (textures procédurales : papier peint taché,
-briques suintantes, parquet ; sols et plafonds projetés ; eau noire animée
-avec reflets ; poussière volumétrique dans le faisceau de la lampe),
-**zéro dépendance, zéro asset** : tout est généré procéduralement
+[Game Design Document](docs/GDD.md) DT-GEN et de son
+[supplément environnement & jumpscares](docs/GDD-supplement.md).
+Vue à la première personne, raycasting texturé par pixel : maison
+victorienne meublée et pourrie de l'intérieur (papier peint qui pèle sur
+cloisons moisies, coulures, fenêtres condamnées), lightmap statique avec
+occlusion (nappes de clair de lune, lueur de la chaudière), flaques
+réfléchissantes sur le parquet, orage dehors (éclairs par les volets,
+tonnerre différé, pluie), eau noire animée, poussière volumétrique.
+Le « jumpscare squad » du supplément est implémenté : anatomie distordue
+avec gel d'images (Agent 01), silence absolu brisé par un blast saturé —
+déchirure métallique, os brisés (Agent 02), et télémétrie qui frappe quand
+le joueur tourne brusquement la caméra ou sort d'une lecture (Agent 03).
+**Zéro dépendance, zéro asset** : tout est généré procéduralement
 (graphismes en canvas 2D, sons synthétisés en WebAudio).
 
 > 🎧 Casque audio fortement recommandé (cris binauraux, sons spatialisés).

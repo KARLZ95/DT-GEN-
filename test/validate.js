@@ -18,7 +18,7 @@ for (const [name, m] of Object.entries(MAPS)) {
   m.grid.forEach((row, iy) => {
     for (let ix = 0; ix < row.length; ix++) {
       const edge = iy === 0 || iy === m.grid.length - 1 || ix === 0 || ix === w - 1;
-      if (edge && !'#EBMF'.includes(row[ix])) fail(`${name} (${ix},${iy}) : bord ouvert '${row[ix]}'`);
+      if (edge && !'#EBMFW'.includes(row[ix])) fail(`${name} (${ix},${iy}) : bord ouvert '${row[ix]}'`);
     }
   });
   // spawn sur une case traversable

@@ -14,9 +14,9 @@ const MAPS = {
     ambient: 0.26,
     water: false,
     grid: [
-      '####E###########################',
+      '####E#####W#########W######W####',
       '#......#........#.......#......#',
-      '#......#........#.......#......#',
+      'W......#........#.......#......#',
       '#......#........#.......#......#',
       '#......#........#.......#......#',
       '###d#######d########d######d####',
@@ -28,22 +28,71 @@ const MAPS = {
       '#............#........#........#',
       '#............#........#........#',
       '#............#........#........#',
-      '##########################B#####',
+      '######W##########W########B#####',
     ],
     spawn: { x: 3.5, y: 2.5, a: Math.PI / 2 },
     // Zone de déclenchement du Jumpscare_01 : tout le couloir principal
     // (GDD : Player_HasKey_Basement && Player_Enters_MainCorridor)
     mirrorZone: { x0: 0.5, x1: 31.5, y0: 5.6, y1: 8.05 },
+    // clair de lune par les volets condamnés (occlusion calculée au bake)
+    lights: [
+      { x: 10.5, y: 1.0,  r: 0.55, g: 0.65, b: 0.95, i: 1.1, moon: true },
+      { x: 20.5, y: 1.0,  r: 0.55, g: 0.65, b: 0.95, i: 1.1, moon: true },
+      { x: 27.5, y: 1.0,  r: 0.55, g: 0.65, b: 0.95, i: 1.1, moon: true },
+      { x: 1.0,  y: 2.5,  r: 0.55, g: 0.65, b: 0.95, i: 0.9, moon: true },
+      { x: 6.5,  y: 13.0, r: 0.55, g: 0.65, b: 0.95, i: 1.0, moon: true },
+      { x: 17.5, y: 13.0, r: 0.55, g: 0.65, b: 0.95, i: 1.0, moon: true },
+    ],
     sprites: [
+      // — objets de la quête —
       { type: 'note',   id: 'note_foyer',   x: 2.0,  y: 1.6 },
       { type: 'album',  id: 'album',        x: 12.0, y: 2.5 },
       { type: 'tv',     id: 'tv',           x: 9.2,  y: 1.7 },
       { type: 'cradle', id: 'cradle',       x: 20.5, y: 2.0 },
       { type: 'note',   id: 'note_nursery', x: 18.2, y: 3.6 },
-      { type: 'key',    id: 'key_basement', x: 27.5, y: 2.5 },
+      { type: 'key',    id: 'key_basement', x: 27.5, y: 2.45 },
       { type: 'note',   id: 'note_bedroom', x: 29.2, y: 3.6 },
       { type: 'fuse',   id: 'fuse',         x: 6.5,  y: 11.5 },
       { type: 'fusebox',id: 'fusebox',      x: 24.5, y: 12.6 },
+      // — entrée —
+      { type: 'clock',     id: 'clock',     x: 1.5,  y: 1.5 },
+      { type: 'coatrack',  id: 'f1',        x: 5.8,  y: 1.3 },
+      // — salon —
+      { type: 'sofa',      id: 'f2',        x: 9.5,  y: 3.6 },
+      { type: 'armchair',  id: 'f3',        x: 14.2, y: 3.4 },
+      { type: 'table',     id: 'f4',        x: 10.8, y: 2.2 },
+      { type: 'bookshelf', id: 'f5',        x: 14.7, y: 1.3 },
+      { type: 'painting',  id: 'f6',        x: 11.5, y: 1.12 },
+      // — chambre d'enfant —
+      { type: 'rockchair', id: 'rockchair', x: 18.0, y: 2.8 },
+      { type: 'dresser',   id: 'f7',        x: 22.5, y: 1.4 },
+      { type: 'blocks',    id: 'f8',        x: 19.4, y: 3.4 },
+      // — chambre parentale —
+      { type: 'bed',       id: 'f9',        x: 26.2, y: 2.2 },
+      { type: 'wardrobe',  id: 'f10',       x: 29.5, y: 1.4 },
+      { type: 'dresser',   id: 'f11',       x: 27.5, y: 2.85 },
+      { type: 'painting',  id: 'f12',       x: 26.0, y: 1.12 },
+      // — cuisine —
+      { type: 'counter',   id: 'f13',       x: 2.2,  y: 9.6 },
+      { type: 'stove',     id: 'f14',       x: 4.0,  y: 9.55 },
+      { type: 'table',     id: 'f15',       x: 7.5,  y: 11.5 },
+      { type: 'chair',     id: 'f16',       x: 8.6,  y: 11.1 },
+      { type: 'chairFallen', id: 'f17',     x: 5.9,  y: 12.2 },
+      { type: 'shelf',     id: 'f18',       x: 11.2, y: 9.6 },
+      // — salle de bain (porcelaine fendue) —
+      { type: 'bathtub',   id: 'bathtub',   x: 15.6, y: 10.2 },
+      { type: 'sink',      id: 'sink',      x: 17.8, y: 9.55 },
+      { type: 'toilet',    id: 'f19',       x: 20.6, y: 9.7 },
+      // — remise de la cave —
+      { type: 'barrel',    id: 'f20',       x: 23.6, y: 11.5 },
+      { type: 'shelf',     id: 'f21',       x: 29.3, y: 9.7 },
+      { type: 'barrel',    id: 'f22',       x: 28.8, y: 12.4 },
+      // — rais de lumière des fenêtres —
+      { type: 'shaft', id: 's1', x: 10.5, y: 1.5 },
+      { type: 'shaft', id: 's2', x: 20.5, y: 1.5 },
+      { type: 'shaft', id: 's3', x: 27.5, y: 1.5 },
+      { type: 'shaft', id: 's4', x: 6.5,  y: 12.5 },
+      { type: 'shaft', id: 's5', x: 17.5, y: 12.5 },
     ],
   },
 
@@ -85,8 +134,16 @@ const MAPS = {
     ],
     spawn: { x: 1.6, y: 1.6, a: 0.5 },
     motherSpawn: { x: 12.5, y: 10.5 },
+    lights: [
+      { x: 12.0, y: 1.3, r: 1.0, g: 0.46, b: 0.13, i: 2.4, fire: true }, // la chaudière
+    ],
     sprites: [
-      { type: 'doll', id: 'doll', x: 21.5, y: 11.3 },
+      { type: 'doll',   id: 'doll', x: 21.5, y: 11.3 },
+      { type: 'barrel', id: 'b1',   x: 4.5,  y: 11.5 },
+      { type: 'barrel', id: 'b2',   x: 18.5, y: 2.6 },
+      { type: 'shelf',  id: 'b3',   x: 22.6, y: 5.5 },
+      { type: 'sheet',  id: 'b4',   x: 9.5,  y: 5.5 },
+      { type: 'sheet',  id: 'b5',   x: 15.5, y: 9.5 },
     ],
   },
 };

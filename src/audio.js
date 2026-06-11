@@ -248,6 +248,71 @@ class SFX {
     this.noise({ dur: 0.4, gain: 0.25, type: 'highpass', f0: 2000, attack: 0.003, release: 0.25 });
   }
 
+  /* Blast saturé (Agent 02) : silence absolu ~80 ms, puis déchirure
+   * métallique (FM écrêtée) + os qui craquent + screech, plein volume. */
+  shriek(vol = 0.8) {
+    if (!this.ctx) return;
+    this.blackout(0.08);
+    const t0 = this.now + 0.08;
+    // déchirure métallique : FM dure passée dans un écrêteur
+    const car = this.ctx.createOscillator(); car.type = 'sawtooth';
+    car.frequency.setValueAtTime(880, t0);
+    car.frequency.exponentialRampToValueAtTime(2300, t0 + 0.18);
+    car.frequency.exponentialRampToValueAtTime(420, t0 + 0.5);
+    const mod = this.ctx.createOscillator(); mod.frequency.value = 137;
+    const mg = this.ctx.createGain(); mg.gain.value = 740;
+    mod.connect(mg); mg.connect(car.frequency);
+    const clip = this.ctx.createWaveShaper();
+    const curve = new Float32Array(256);
+    for (let i = 0; i < 256; i++) curve[i] = Math.tanh((i / 128 - 1) * 14);
+    clip.curve = curve;
+    const g = this._gainEnv(t0, vol * 0.5, 0.004, 0.22, 0.3);
+    car.connect(clip); clip.connect(g); g.connect(this.master); g.connect(this._echo);
+    car.start(t0); car.stop(t0 + 0.6); mod.start(t0); mod.stop(t0 + 0.6);
+    // os qui cèdent
+    [0, 0.07, 0.13].forEach(w => {
+      this.noise({ dur: 0.05, gain: vol * 0.45, type: 'lowpass', f0: 650,
+                   attack: 0.002, release: 0.03, when: 0.08 + w });
+      this.noise({ dur: 0.04, gain: vol * 0.3, type: 'highpass', f0: 2600,
+                   attack: 0.002, release: 0.025, when: 0.11 + w });
+    });
+    // screech + impact sub
+    this.noise({ dur: 0.45, gain: vol * 0.5, type: 'highpass', f0: 3200,
+                 attack: 0.004, release: 0.3, when: 0.08 });
+    this.tone({ type: 'sine', f0: 120, f1: 26, dur: 0.7, gain: vol * 0.7,
+                attack: 0.004, release: 0.45, when: 0.08 });
+  }
+
+  /* pluie continue contre les vitres */
+  rain(on) {
+    if (!this.ctx) return;
+    if (on && !this._rainNodes) {
+      const src = this.ctx.createBufferSource();
+      src.buffer = this._noiseBuf; src.loop = true;
+      const f = this.ctx.createBiquadFilter();
+      f.type = 'highpass'; f.frequency.value = 2600;
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0.0001, this.now);
+      g.gain.linearRampToValueAtTime(0.028, this.now + 2);
+      const lfo = this.ctx.createOscillator(); lfo.frequency.value = 0.07;
+      const lg = this.ctx.createGain(); lg.gain.value = 0.008;
+      lfo.connect(lg); lg.connect(g.gain);
+      src.connect(f); f.connect(g); g.connect(this.master);
+      src.start(); lfo.start();
+      this._rainNodes = { src, g, lfo };
+    } else if (!on && this._rainNodes) {
+      const { src, g, lfo } = this._rainNodes;
+      g.gain.linearRampToValueAtTime(0.0001, this.now + 1.2);
+      src.stop(this.now + 1.4); lfo.stop(this.now + 1.4);
+      this._rainNodes = null;
+    }
+  }
+
+  thunder(dist = 1) { // roulement lointain, retardé après l'éclair
+    this.noise({ dur: 3.0, gain: 0.22 / dist, f0: 130, f1: 42, attack: 0.25, release: 1.8 });
+    this.tone({ type: 'sine', f0: 44, f1: 30, dur: 2.6, gain: 0.18 / dist, attack: 0.3, release: 1.6 });
+  }
+
   glassCrack() { // verre qui se fissure
     for (let i = 0; i < 4; i++) {
       this.noise({ dur: 0.08, gain: 0.18, type: 'highpass', f0: 5200 - i * 800,
