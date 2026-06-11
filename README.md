@@ -2,8 +2,11 @@
 
 Jeu d'horreur psychologique jouable dans le navigateur — implémentation du
 [Game Design Document](docs/GDD.md) DT-GEN. Vue à la première personne,
-rendu raycasting façon VHS, **zéro dépendance, zéro asset** : tout est
-généré procéduralement (graphismes en canvas 2D, sons synthétisés en WebAudio).
+raycasting texturé par pixel (textures procédurales : papier peint taché,
+briques suintantes, parquet ; sols et plafonds projetés ; eau noire animée
+avec reflets ; poussière volumétrique dans le faisceau de la lampe),
+**zéro dépendance, zéro asset** : tout est généré procéduralement
+(graphismes en canvas 2D, sons synthétisés en WebAudio).
 
 > 🎧 Casque audio fortement recommandé (cris binauraux, sons spatialisés).
 

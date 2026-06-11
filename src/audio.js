@@ -25,6 +25,19 @@ class SFX {
     this._noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
     const d = this._noiseBuf.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    // écho global (cave/couloir) alimenté par les cris
+    this._echo = this.ctx.createDelay(1);
+    this._echo.delayTime.value = 0.23;
+    const fb = this.ctx.createGain(); fb.gain.value = 0.32;
+    const wet = this.ctx.createGain(); wet.gain.value = 0.35;
+    this._echo.connect(fb); fb.connect(this._echo);
+    this._echo.connect(wet); wet.connect(this.master);
+    // courbe de distorsion pour les voix
+    this._distCurve = new Float32Array(256);
+    for (let i = 0; i < 256; i++) {
+      const x = i / 128 - 1;
+      this._distCurve[i] = Math.tanh(x * 4);
+    }
   }
 
   get now() { return this.ctx ? this.ctx.currentTime : 0; }
@@ -185,15 +198,77 @@ class SFX {
     this._staticNode = null;
   }
 
-  scream(behind = true, vol = 0.7) { // cri binaural 3D (GDD : derrière le joueur)
+  scream(behind = true, vol = 0.7) { // cri binaural 3D distordu (GDD : derrière le joueur)
     const z = behind ? 1.2 : -0.5;
-    for (let i = 0; i < 3; i++) {
-      this.tone({ type: 'sawtooth', f0: 600 + i * 180, f1: 1300 + i * 200, dur: 1.0,
-                  gain: vol / 3, attack: 0.02, release: 0.45,
-                  panX: (i - 1) * 0.3, panZ: z });
+    const t0 = this.now;
+    // voix déchirée : dents de scie désaccordées -> waveshaper -> écho
+    const sh = this.ctx.createWaveShaper(); sh.curve = this._distCurve;
+    const g = this._gainEnv(t0, vol * 0.5, 0.015, 0.45, 0.55);
+    const p = this._pan(0, z);
+    sh.connect(g); g.connect(p); p.connect(this.master); g.connect(this._echo);
+    for (let i = 0; i < 4; i++) {
+      const o = this.ctx.createOscillator();
+      o.type = 'sawtooth';
+      const f = 520 + i * 170 + Math.random() * 40;
+      o.frequency.setValueAtTime(f, t0);
+      o.frequency.exponentialRampToValueAtTime(f * 2.3, t0 + 0.35);
+      o.frequency.exponentialRampToValueAtTime(f * 1.6, t0 + 1.0);
+      // vibrato paniqué
+      const lfo = this.ctx.createOscillator(); lfo.frequency.value = 11 + i * 2;
+      const lg = this.ctx.createGain(); lg.gain.value = f * 0.05;
+      lfo.connect(lg); lg.connect(o.frequency);
+      o.connect(sh);
+      o.start(t0); o.stop(t0 + 1.2); lfo.start(t0); lfo.stop(t0 + 1.2);
     }
-    this.noise({ dur: 1.0, gain: vol * 0.5, type: 'highpass', f0: 1200,
-                 attack: 0.02, release: 0.4, panZ: z });
+    // souffle strident + chute de basse viscérale
+    this.noise({ dur: 1.0, gain: vol * 0.55, type: 'bandpass', f0: 2600, f1: 1400, q: 1.2,
+                 attack: 0.015, release: 0.4, panZ: z });
+    this.subDrop(vol * 0.9);
+  }
+
+  subDrop(vol = 0.5) { // impact sub-bass qui tombe dans le ventre
+    this.tone({ type: 'sine', f0: 130, f1: 27, dur: 0.9, gain: vol,
+                attack: 0.005, release: 0.5 });
+  }
+
+  dreadSwell(dur = 1.6) { // nappe de terreur qui enfle avant un choc
+    this.tone({ type: 'sawtooth', f0: 55, f1: 58, dur, gain: 0.16,
+                attack: dur * 0.75, release: dur * 0.2, filterF: 300 });
+    this.tone({ type: 'sawtooth', f0: 55.8, f1: 52, dur, gain: 0.13,
+                attack: dur * 0.75, release: dur * 0.2, filterF: 260 });
+    this.noise({ dur, gain: 0.07, type: 'bandpass', f0: 2200, f1: 3400, q: 8,
+                 attack: dur * 0.8, release: dur * 0.15 });
+  }
+
+  stinger() { // cluster dissonant sec
+    [620, 657, 698, 932].forEach((f, i) => {
+      this.tone({ type: 'sawtooth', f0: f, f1: f * 0.96, dur: 0.5, gain: 0.12,
+                  attack: 0.004, release: 0.35, panX: (i - 1.5) * 0.2 });
+    });
+    this.noise({ dur: 0.4, gain: 0.25, type: 'highpass', f0: 2000, attack: 0.003, release: 0.25 });
+  }
+
+  glassCrack() { // verre qui se fissure
+    for (let i = 0; i < 4; i++) {
+      this.noise({ dur: 0.08, gain: 0.18, type: 'highpass', f0: 5200 - i * 800,
+                   attack: 0.002, release: 0.05, when: i * 0.07 });
+    }
+  }
+
+  ropeCreak() {
+    this.tone({ type: 'sawtooth', f0: 160, f1: 120, dur: 0.5, gain: 0.10,
+                attack: 0.08, release: 0.25, filterF: 600 });
+  }
+
+  neckSnap() {
+    this.noise({ dur: 0.06, gain: 0.35, type: 'lowpass', f0: 700, attack: 0.002, release: 0.04 });
+    this.noise({ dur: 0.05, gain: 0.22, type: 'highpass', f0: 2400, attack: 0.002,
+                 release: 0.03, when: 0.05 });
+    this.tone({ type: 'sine', f0: 95, f1: 50, dur: 0.22, gain: 0.4, attack: 0.003, release: 0.16 });
+  }
+
+  plink() { // une seule note de boîte à musique, seule dans le noir
+    this.tone({ type: 'sine', f0: 1318.5, dur: 0.8, gain: 0.08, attack: 0.004, release: 0.7, panZ: 0.2 });
   }
 
   glitchBlast() { // blast haute fréquence + statique (GDD jumpscare 02)

@@ -115,7 +115,7 @@ teleport(27.4, 4.3, Math.PI / 2);
 press('KeyE'); // ouvre la porte de la chambre
 press('KeyW'); runFrames(1.2); release('KeyW');
 expect(G.flags.j1, 'Jumpscare_01 (miroir) déclenché');
-runFrames(3.0);
+runFrames(4.2);
 expect(G.mode === 'play', 'Jumpscare_01 terminé');
 
 // tableau électrique : le fusible y prend place
